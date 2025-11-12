@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
      ========================= */
   
   // ** ⚠️ IMPORTANTE: Mude esta URL para o endereço do seu servidor de backend! **
-  const API_URL = 'http://localhost:3000/api'; 
+  const API_URL = 'https://finance-pro-api.onrender.com/api'; 
 
   const moneyFormat = value => {
     if (typeof value !== "number") value = parseFloat(String(value).replace(/[^0-9.-]+/g,"")) || 0;
