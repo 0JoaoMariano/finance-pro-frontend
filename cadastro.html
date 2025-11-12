@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance Pro — Cadastro</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <div class="auth-left">
+        <h1 class="brand">Finance <span class="accent">Pro</span></h1>
+        <p class="subtitle">Crie sua conta e comece a organizar suas finanças.</p>
+
+        <label class="field">
+          <span>Nome completo</span>
+          <input id="cadastro-nome" type="text" placeholder="Seu nome" />
+        </label>
+
+        <label class="field">
+          <span>E-mail</span>
+          <input id="cadastro-email" type="email" placeholder="seu@email.com" />
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input id="cadastro-senha" type="password" placeholder="Mínimo 6 caracteres" />
+        </label>
+
+        <div class="actions">
+          <button id="cadastro-btn" class="btn primary btn-animated">Cadastrar</button>
+          <a href="index.html" class="btn ghost">Já tenho conta</a>
+        </div>
+
+        <p class="muted small">Suas informações ficam salvas no navegador para este projeto local.</p>
+      </div>
+
+      <div class="auth-right">
+        <div class="welcome-illustration">
+          <svg width="220" height="220" viewBox="0 0 64 64" fill="none" aria-hidden>
+            <rect width="64" height="64" rx="12" fill="#3B82F6"/>
+            <path d="M20 36c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="32" cy="24" r="3.5" fill="#fff"/>
+          </svg>
+        </div>
+        <p class="big">Pronto para começar?</p>
+      </div>
+    </div>
+
+    <footer class="auth-footer">
+      <small>Voltar ao <a href="index.html">login</a></small>
+    </footer>
+  </main>
+
+<script>
+  // Cadastro logic (API Call)
+  const API_URL = 'http://localhost:3000/api'; // Mantenha consistente com script.js
+
+  document.getElementById("cadastro-btn").addEventListener("click", async () => {
+    const nome = document.getElementById("cadastro-nome").value.trim();
+    const email = document.getElementById("cadastro-email").value.trim();
+    const senha = document.getElementById("cadastro-senha").value.trim();
+
+    if (!nome || !email || !senha) return alert("Preencha todos os campos.");
+    if (senha.length < 6) return alert("Senha muito curta. Use pelo menos 6 caracteres.");
+
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, senha })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Falha no cadastro." }));
+            return alert(errorData.message || "Erro no cadastro. O e-mail já pode estar em uso.");
+        }
+
+        alert("Cadastro realizado! Faça login.");
+        window.location.href = "index.html";
+
+    } catch (error) {
+        console.error("Erro de conexão:", error);
+        alert("Não foi possível conectar ao servidor. Verifique se o backend está rodando em " + API_URL);
+    }
+  });
+  
+  // quick keyboard Enter support
+  [ "cadastro-nome", "cadastro-email", "cadastro-senha" ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("keypress", (e) => {
+      if (e.key === 'Enter') document.getElementById("cadastro-btn").click();
+    });
+  });
+</script>
+</body>
+</html>

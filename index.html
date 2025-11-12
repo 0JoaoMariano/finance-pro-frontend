@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance Pro — Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+
+  <main class="auth-container">
+    <div class="auth-card">
+      <div class="auth-left">
+        <h1 class="brand">Finance <span class="accent">Pro</span></h1>
+        <p class="subtitle">Controle financeiro simples e bonito — suas finanças no controle.</p>
+
+        <label class="field">
+          <span>E-mail</span>
+          <input id="login-email" type="email" placeholder="seu@email.com" />
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input id="login-senha" type="password" placeholder="••••••••" />
+        </label>
+
+        <div class="actions">
+          <button id="login-btn" class="btn primary btn-animated">Entrar</button>
+          <a href="cadastro.html" class="btn ghost">Criar conta</a>
+        </div>
+
+        <p class="muted small">Projeto local — para produção considere backend seguro.</p>
+      </div>
+
+      <div class="auth-right">
+        <div class="welcome-illustration">
+          <svg width="220" height="220" viewBox="0 0 64 64" fill="none" aria-hidden>
+            <rect width="64" height="64" rx="12" fill="#10b981"/>
+            <path d="M20 36c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="32" cy="24" r="3.5" fill="#fff"/>
+          </svg>
+        </div>
+        <p class="big">Bem-vindo ao Finance Pro</p>
+      </div>
+    </div>
+
+    <footer class="auth-footer">
+      <small>Não tem conta? <a href="cadastro.html">Criar nova</a></small>
+    </footer>
+  </main>
+
+<script>
+  // Login logic (API Call)
+  const API_URL = 'http://localhost:3000/api'; // Mantenha consistente com script.js
+
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const email = document.getElementById("login-email").value.trim();
+    const senha = document.getElementById("login-senha").value.trim();
+
+    if (!email || !senha) return alert("Preencha e-mail e senha.");
+
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "E-mail ou senha incorretos." }));
+            return alert(errorData.message || "Falha no login. Verifique o console para detalhes.");
+        }
+
+        const data = await response.json();
+        
+        // ** API deve retornar um token e info do usuário no objeto 'data' **
+        localStorage.setItem("authToken", data.token); // Salva o token de segurança
+        localStorage.setItem("loggedUser", email); 
+        
+        if (!localStorage.getItem("theme")) localStorage.setItem("theme","light");
+        window.location.href = "dashboard.html";
+
+    } catch (error) {
+        console.error("Erro de conexão com o servidor:", error);
+        alert("Não foi possível conectar ao servidor. Verifique se o backend está rodando em " + API_URL);
+    }
+  });
+
+  // quick keyboard Enter support
+  [ "login-email", "login-senha" ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("keypress", (e) => {
+      if (e.key === 'Enter') document.getElementById("login-btn").click();
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance Pro — Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+
+<script>
+  const logged = localStorage.getItem("loggedUser");
+  if (!logged) {
+    alert("Faça login para acessar o dashboard.");
+    window.location.href = "index.html";
+  }
+</script>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <h2 class="brand-small">Finance <span class="accent">Pro</span></h2>
+      <div class="user-info">
+        <div id="user-avatar" class="avatar"></div>
+        <div>
+          <div id="user-name" class="user-name"></div>
+          <div id="user-email" class="user-email muted small"></div>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <button class="menu-item active" data-section="dashboard">Dashboard</button>
+        <button class="menu-item" data-section="contas">Contas</button>
+        <button class="menu-item" data-section="categorias">Categorias</button>
+        <button class="menu-item" data-section="transacoes">Transações</button>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <!-- Connect bank button now opens dedicated page -->
+      <button id="connect-bank-btn" class="btn primary">+ Conectar Banco</button>
+
+      <button id="theme-toggle" class="btn theme-btn">🌙 Dark</button>
+      <button id="logout-btn" class="btn logout">Sair</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="main-header">
+      <h1 id="page-title">Dashboard</h1>
+      <div class="header-actions">
+        <div class="chip">Saldo total: <strong id="resumo-saldo-small">R$ 0,00</strong></div>
+      </div>
+    </header>
+
+    <section id="dashboard-section" class="section">
+      <div class="grid-resumo">
+        <div class="card resumo-card entrada">
+          <h3>Entradas</h3>
+          <p id="resumo-entradas">R$ 0,00</p>
+        </div>
+        <div class="card resumo-card saida">
+          <h3>Saídas</h3>
+          <p id="resumo-saidas">R$ 0,00</p>
+        </div>
+        <div class="card resumo-card saldo">
+          <h3>Saldo Total</h3>
+          <p id="resumo-saldo">R$ 0,00</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <label>De <input type="date" id="filtroDataInicio"></label>
+        <label>Até <input type="date" id="filtroDataFim"></label>
+        <label>Categoria
+          <select id="filtroCategoria"><option value="">Todas</option></select>
+        </label>
+        <label>Conta
+          <select id="filtroBanco"><option value="">Todas</option></select>
+        </label>
+        <button id="aplicarFiltros" class="btn small">Filtrar</button>
+      </div>
+
+      <div class="grid-charts">
+        <div class="card chart-card">
+          <h3>Despesas por categoria</h3>
+          <canvas id="grafico-categorias"></canvas>
+        </div>
+        <div class="card chart-card">
+          <h3>Saldos por conta</h3>
+          <canvas id="grafico-bancos"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="contas-section" class="section hidden">
+      <div class="section-top">
+        <h2>Contas</h2>
+        <form id="conta-form" class="inline-form">
+          <input id="conta-nome" placeholder="Nome da conta" required />
+          <input id="conta-saldo" placeholder="Saldo inicial (ex: 1200.50)" />
+          <button type="submit" class="btn small">Adicionar</button>
+        </form>
+      </div>
+      <ul id="lista-contas" class="list"></ul>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>Transferência entre contas</h3>
+        <form id="transfer-form" class="inline-form" style="gap:8px;">
+          <select id="transfer-from" required></select>
+          <select id="transfer-to" required></select>
+          <input id="transfer-amount" placeholder="Valor (ex: 120.50)" required />
+          <button type="submit" class="btn small primary">Transferir</button>
+        </form>
+        <p class="small muted" style="margin-top:8px">Ao transferir, será criada uma saída na conta de origem e uma entrada na conta de destino com categoria "Transferência".</p>
+      </div>
+    </section>
+
+    <section id="categorias-section" class="section hidden">
+      <div class="section-top">
+        <h2>Categorias</h2>
+        <form id="categoria-form" class="inline-form">
+          <input id="categoria-nome" placeholder="Nome da categoria" required />
+          <button type="submit" class="btn small">Adicionar</button>
+        </form>
+      </div>
+      <ul id="lista-categorias" class="list"></ul>
+    </section>
+
+    <section id="transacoes-section" class="section hidden">
+      <div class="section-top">
+        <h2>Transações</h2>
+        <form id="transaction-form" class="card transacao-form">
+          <input id="desc" placeholder="Descrição" required />
+          <input id="amount" placeholder="Valor (ex: 120.50)" required />
+          <select id="type">
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+          <select id="conta-selecionada"></select>
+          <select id="categoria-selecionada"></select>
+          <input id="date" type="date" required />
+          <button type="submit" class="btn primary">Adicionar</button>
+        </form>
+      </div>
+
+      <div class="card table-card">
+        <table class="transactions-table">
+          <thead>
+            <tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Conta</th><th>Categoria</th><th></th></tr>
+          </thead>
+          <tbody id="transaction-list"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

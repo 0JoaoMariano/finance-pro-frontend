@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance Pro — Conectar Contas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page" style="background:linear-gradient(180deg,#eef8ff,#f7fff5)">
+
+  <main class="auth-container" style="max-width:900px;padding:28px;">
+    <div class="auth-card" style="display:block;padding:24px;">
+      <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="margin:0">Conectar Contas</h2>
+        <a href="dashboard.html" class="btn ghost">Voltar ao dashboard</a>
+      </header>
+
+      <section style="display:grid;grid-template-columns:1fr 320px;gap:18px;">
+        <div>
+          <p class="muted">Use este fluxo para conectar suas contas. Nesta versão local podemos simular a importação ou colar um token de desenvolvimento.</p>
+
+          <div class="card" style="margin-top:12px;">
+            <h3>Escolher provedor</h3>
+            <div class="widget-options" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+              <button class="btn provider-btn" data-bank="Banco A">Banco A</button>
+              <button class="btn provider-btn" data-bank="Banco B">Banco B</button>
+              <button class="btn provider-btn" data-bank="Banco C">Banco C</button>
+              <button class="btn provider-btn" data-bank="Belvo">Belvo (exemplo)</button>
+            </div>
+
+            <div style="margin-top:12px;">
+              <label class="small">Ou cole aqui um token (modo dev):</label>
+              <input id="connect-token" placeholder="JSON token / link (opcional)" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;margin-top:6px" />
+            </div>
+
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+              <button id="connect-back" class="btn ghost">Cancelar</button>
+              <button id="connect-now" class="btn primary">Conectar conta</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <h3>Conexões ativas</h3>
+            <ul id="connected-list" class="list" style="margin-top:8px"></ul>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card" style="position:sticky;top:18px">
+            <h3>Dicas de segurança</h3>
+            <p class="small muted">Nunca cole credenciais de produção em páginas sem backend. Este projeto é local — para integração real você precisa de um backend seguro e provedores como Belvo ou Plaid.</p>
+            <hr style="margin:12px 0" />
+            <p><strong>Simulação</strong></p>
+            <p class="small muted">No modo simulado geramos algumas transações e uma conta relacionada.</p>
+            <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+              <button id="simulate-small" class="btn small">Simular 3</button>
+              <button id="simulate-large" class="btn small">Simular 10</button>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+<script src="script.js"></script>
+<script>
+  // connect page behaviour
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const providerBtns = document.querySelectorAll('.provider-btn');
+    providerBtns.forEach(b=>b.addEventListener('click', ()=>{
+      providerBtns.forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      document.getElementById('connect-token').value = '';
+    }));
+
+    document.getElementById('connect-back').addEventListener('click', ()=> location.href='dashboard.html');
+    document.getElementById('connect-now').addEventListener('click', ()=> {
+      const selected = document.querySelector('.provider-btn.selected');
+      const token = document.getElementById('connect-token').value.trim();
+      if (token) {
+        try {
+          const parsed = JSON.parse(token);
+          // delegate to import function from script.js
+          if (window.importTransactionsFromExternal) {
+            window.importTransactionsFromExternal(parsed, selected ? selected.dataset.bank : 'Token Import');
+            location.href = 'dashboard.html';
+            return;
+          }
+        } catch(e){ /* fallthrough to simulate */ }
+      }
+      const bankName = selected ? selected.dataset.bank : 'Banco (simulado)';
+      if (confirm('Simular consentimento e importar transações de '+bankName+'?')) {
+        if (window.simulateBankImport) window.simulateBankImport(bankName, 8);
+        location.href = 'dashboard.html';
+      }
+    });
+
+    document.getElementById('simulate-small').addEventListener('click', ()=>{ if (window.simulateBankImport) window.simulateBankImport('Simulado',3); loadConnected(); });
+    document.getElementById('simulate-large').addEventListener('click', ()=>{ if (window.simulateBankImport) window.simulateBankImport('Simulado',10); loadConnected(); });
+
+    function loadConnected(){
+      const user = localStorage.getItem('loggedUser');
+      if (!user) return location.href='index.html';
+      const key = 'financeProData_'+user;
+      const data = JSON.parse(localStorage.getItem(key) || '{}');
+      const list = document.getElementById('connected-list');
+      list.innerHTML = '';
+      (data.connectedBanks || []).forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        li.innerHTML = `<div><strong>${b.name}</strong><div class="small muted">${new Date(b.connectedAt).toLocaleString()}</div></div><div class="list-actions"><button class="btn xs ghost" onclick="disconnectBank(${b.id})">Desconectar</button></div>`;
+        list.appendChild(li);
+      });
+    }
+
+    loadConnected();
+  });
+</script>
+</body>
+</html>
